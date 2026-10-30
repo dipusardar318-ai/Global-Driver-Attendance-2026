@@ -1,430 +1,534 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance System (12 Hours Shift)</title>
+  <title>Driver Shift & Attendance System</title>
+  <!-- jsPDF & jsPDF-AutoTable for direct client-side PDF generation and sharing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-
     body {
-      background: #f1f5f9;
+      background: #eef2f6;
+      color: #1e293b;
+      padding: 24px 16px;
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 16px;
     }
-
     .container {
       background: #ffffff;
-      max-width: 480px;
       width: 100%;
+      max-width: 680px;
+      padding: 28px 24px;
       border-radius: 14px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
     }
-
-    h2 {
+    .header {
       text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 16px;
+    }
+    .header h2 {
+      font-size: 22px;
+      font-weight: 700;
       color: #0f172a;
-      margin-bottom: 4px;
-      font-size: 1.4rem;
     }
-
-    .subtitle {
-      text-align: center;
+    .header p {
+      font-size: 13px;
       color: #64748b;
-      font-size: 0.85rem;
-      margin-bottom: 20px;
+      margin-top: 4px;
     }
-
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
-
-    .form-group label {
+    label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 13px;
       font-weight: 600;
       color: #334155;
       margin-bottom: 6px;
     }
-
-    .form-group input {
+    input[type="text"] {
       width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e1;
       border-radius: 8px;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    .form-group input:focus {
-      border-color: #2563eb;
-    }
-
-    .form-group input:disabled {
-      background: #f1f5f9;
-      color: #64748b;
-      cursor: not-allowed;
-    }
-
-    .timer-card {
+      font-size: 15px;
       background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 16px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .timer-display {
-      font-size: 2.2rem;
-      font-weight: 700;
       color: #0f172a;
-      letter-spacing: 1px;
+      transition: border-color 0.2s;
     }
-
-    .target-text {
-      font-size: 0.8rem;
-      color: #64748b;
-      margin-top: 4px;
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #ffffff;
     }
-
-    .progress-bar-container {
-      width: 100%;
-      height: 8px;
-      background: #e2e8f0;
-      border-radius: 4px;
-      margin-top: 12px;
-      overflow: hidden;
+    .readonly-box {
+      background: #f1f5f9;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2563eb;
     }
-
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: #2563eb;
-      transition: width 0.3s ease;
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
-
-    .status-alert {
-      font-size: 0.85rem;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      display: none;
-      text-align: center;
+    @media (max-width: 520px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
     }
-
-    .status-alert.active {
-      display: block;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
-    }
-
-    .btn-group {
-      display: flex;
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 16px;
+      margin: 20px 0;
     }
-
     button {
-      flex: 1;
-      padding: 14px;
+      padding: 13px 16px;
       border: none;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
     }
-
-    .btn-checkin {
+    .btn-in {
       background: #16a34a;
       color: #ffffff;
     }
-
-    .btn-checkin:hover:not(:disabled) {
+    .btn-in:hover:not(:disabled) {
       background: #15803d;
     }
-
-    .btn-checkout {
+    .btn-out {
       background: #dc2626;
       color: #ffffff;
     }
-
-    .btn-checkout:hover:not(:disabled) {
+    .btn-out:hover:not(:disabled) {
       background: #b91c1c;
     }
-
+    .btn-pdf {
+      background: #2563eb;
+      color: #ffffff;
+      width: 100%;
+      margin-top: 12px;
+    }
+    .btn-pdf:hover {
+      background: #1d4ed8;
+    }
+    .btn-share {
+      background: #0284c7;
+      color: #ffffff;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .btn-share:hover {
+      background: #0369a1;
+    }
     button:disabled {
       background: #cbd5e1;
-      color: #94a3b8;
+      color: #64748b;
       cursor: not-allowed;
+      box-shadow: none;
     }
-
-    /* Share Section */
-    .share-box {
-      display: none;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 20px;
-    }
-
-    .share-box h4 {
-      font-size: 0.9rem;
-      color: #166534;
-      margin-bottom: 8px;
-    }
-
-    .share-buttons {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-share-wa {
-      background: #25d366;
-      color: #ffffff;
-      padding: 10px;
-      font-size: 0.85rem;
-      border-radius: 6px;
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-      font-weight: 600;
-      flex: 1;
-    }
-
-    .btn-copy {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 10px;
-      font-size: 0.85rem;
-      border-radius: 6px;
-      flex: 1;
-    }
-
-    .history-card {
-      border-top: 1px solid #e2e8f0;
-      padding-top: 16px;
-    }
-
-    .history-card h3 {
-      font-size: 0.95rem;
-      color: #334155;
-      margin-bottom: 12px;
-    }
-
-    .log-item {
-      font-size: 0.82rem;
+    .status-panel {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      line-height: 1.5;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 22px;
     }
-
-    .log-item a {
+    .status-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .status-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-top: 3px;
+    }
+    .timer-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 18px 0 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    td {
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #334155;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .badge-in {
+      background: #dcfce7;
+      color: #15803d;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .badge-out {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .map-link {
       color: #2563eb;
       text-decoration: none;
       font-weight: 600;
+    }
+    .map-link:hover {
+      text-decoration: underline;
+    }
+    .hint {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 6px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>Daily Attendance</h2>
-    <p class="subtitle">Automatic Location Tracking System</p>
+<div class="container">
+  <div class="header">
+    <h2>Driver Shift Attendance</h2>
+    <p>Automated 12-Hour Shift, GPS Location & PDF Export</p>
+  </div>
 
-    <!-- Employee Name Input -->
+  <div class="grid-2">
     <div class="form-group">
-      <label for="empName">  (Employee Name):</label>
-      <input type="text" id="empName" placeholder="   ...">
+      <label for="driverName">Driver Name:</label>
+      <input type="text" id="driverName" placeholder="Enter Driver Name" required>
     </div>
-
-    <div class="timer-card">
-      <div class="timer-display" id="timer">00:00:00</div>
-      <div class="target-text"> :   (12:00:00)</div>
-      <div class="progress-bar-container">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-    </div>
-
-    <div id="statusMessage" class="status-alert"></div>
-
-    <div class="btn-group">
-      <button id="btnCheckIn" class="btn-checkin" onclick="handleAttendance('Check-in')">Check In</button>
-      <button id="btnCheckOut" class="btn-checkout" onclick="handleAttendance('Check-out')" disabled>Check Out</button>
-    </div>
-
-    <!-- Share Link Area -->
-    <div id="shareBox" class="share-box">
-      <h4>   :</h4>
-      <div class="share-buttons">
-        <a id="waShareBtn" class="btn-share-wa" href="#" target="_blank">WhatsApp- </a>
-        <button class="btn-copy" onclick="copyReportLink()"> </button>
-      </div>
-    </div>
-
-    <div class="history-card">
-      <h3>  :</h3>
-      <div id="logContainer">
-        <p style="color: #94a3b8; font-size: 0.85rem;">     </p>
-      </div>
+    <div class="form-group">
+      <label>Current Date (Auto):</label>
+      <div class="readonly-box" id="autoDate">--</div>
     </div>
   </div>
 
-  <script>
-    let checkInTimestamp = null;
-    let timerInterval = null;
-    const targetHours = 12;
-    const targetMilliseconds = targetHours * 60 * 60 * 1000;
-    let latestShareText = "";
+  <div class="btn-row">
+    <button id="checkInBtn" class="btn-in" onclick="processAttendance('Check-In')">
+      <span>✔</span> Check-In
+    </button>
+    <button id="checkOutBtn" class="btn-out" onclick="processAttendance('Check-Out')" disabled>
+      <span>✖</span> Check-Out
+    </button>
+  </div>
 
-    const empNameInput = document.getElementById('empName');
-    const btnCheckIn = document.getElementById('btnCheckIn');
-    const btnCheckOut = document.getElementById('btnCheckOut');
-    const timerDisplay = document.getElementById('timer');
-    const progressBar = document.getElementById('progressBar');
-    const statusMessage = document.getElementById('statusMessage');
-    const logContainer = document.getElementById('logContainer');
-    const shareBox = document.getElementById('shareBox');
-    const waShareBtn = document.getElementById('waShareBtn');
+  <div class="status-panel">
+    <div class="status-title">System Status</div>
+    <div class="status-val" id="statusMessage">Ready for check-in.</div>
+    <div class="timer-badge" id="timerDisplay">Shift Timer (12h): 12:00:00</div>
+  </div>
 
-    function showStatus(text) {
-      statusMessage.textContent = text;
-      statusMessage.classList.add('active');
+  <div class="section-title">
+    <span>Shift Log Entries</span>
+    <span style="font-size: 12px; font-weight: normal; color: #64748b;" id="logCount">Total: 0 logs</span>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Action</th>
+          <th>Driver</th>
+          <th>Time</th>
+          <th>GPS Coordinates</th>
+        </tr>
+      </thead>
+      <tbody id="attendanceTableBody">
+        <tr>
+          <td colspan="5" style="text-align:center; color:#94a3b8; padding: 20px;">No shift attendance records yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button class="btn-pdf" onclick="generatePDF()">
+    <span>📄</span> Download Attendance Report (PDF)
+  </button>
+  <button class="btn-share" onclick="sharePDF()">
+    <span>🔗</span> Share Attendance PDF via WhatsApp / Apps
+  </button>
+  <div class="hint">* Note: Geolocation requires location permissions on your device / browser.</div>
+</div>
+
+<script>
+  let shiftCountdown = null;
+  const SHIFT_HOURS = 12;
+  let checkInEpoch = null;
+  const attendanceLogs = [];
+
+  // 1. Automatic Date Initializer
+  function updateAutoDate() {
+    const today = new Date();
+    const options = { year: 'numeric', month: 'short', day: '2-digit' };
+    const dateStr = today.toLocaleDateString('en-GB', options);
+    document.getElementById('autoDate').innerText = dateStr;
+    return dateStr;
+  }
+  const currentDateStr = updateAutoDate();
+
+  // 2. Attendance & Geolocation Handler
+  function processAttendance(type) {
+    const driverInput = document.getElementById('driverName');
+    const driverName = driverInput.value.trim();
+
+    if (!driverName) {
+      alert("Please enter Driver Name first.");
+      driverInput.focus();
+      return;
     }
 
-    function hideStatus() {
-      statusMessage.classList.remove('active');
-      statusMessage.textContent = '';
+    const statusMsg = document.getElementById('statusMessage');
+    statusMsg.innerText = `Acquiring GPS location for ${type}...`;
+
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      statusMsg.innerText = "Error: Geolocation not supported.";
+      return;
     }
 
-    function handleAttendance(actionType) {
-      const employeeName = empNameInput.value.trim();
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        const now = new Date();
+        const timeFormatted = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateFormatted = updateAutoDate();
 
-      //    -   
-      if (!employeeName) {
-        alert("     (Employee Name) !");
-        empNameInput.focus();
-        return;
-      }
+        const record = {
+          date: dateFormatted,
+          type: type,
+          driver: driverName,
+          time: timeFormatted,
+          lat: lat,
+          lng: lng,
+          mapUrl: `https://www.google.com/maps?q=${lat},${lng}`
+        };
 
-      if (!navigator.geolocation) {
-        alert("      ");
-        return;
-      }
+        attendanceLogs.push(record);
+        renderTable();
 
-      showStatus("   ,    ...");
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          hideStatus();
-          const lat = position.coords.latitude.toFixed(6);
-          const lon = position.coords.longitude.toFixed(6);
-          const now = new Date();
-          const dateString = now.toLocaleDateString();
-          const timeString = now.toLocaleTimeString();
-          const mapLink = `https://maps.google.com/?q=${lat},${lon}`;
-
-          if (actionType === 'Check-in') {
-            checkInTimestamp = now.getTime();
-            startTimer();
-            empNameInput.disabled = true; // -     
-            btnCheckIn.disabled = true;
-            btnCheckOut.disabled = false;
-          } else {
-            stopTimer();
-            empNameInput.disabled = false;
-            btnCheckIn.disabled = false;
-            btnCheckOut.disabled = true;
-          }
-
-          // WhatsApp      
-          latestShareText = ` Attendance Update\n` +
-            `Employee: ${employeeName}\n` +
-            `Status: ${actionType}\n` +
-            `Date: ${dateString}\n` +
-            `Time: ${timeString}\n` +
-            `Location: ${mapLink}`;
-
-          // WhatsApp   
-          waShareBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(latestShareText)}`;
-          shareBox.style.display = 'block';
-
-          appendLog(employeeName, actionType, timeString, mapLink);
-        },
-        (error) => {
-          hideStatus();
-          if (error.code === error.PERMISSION_DENIED) {
-            alert("       Location Permission 'Allow' ");
-          } else {
-            alert("     GPS     ");
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    }
-
-    function startTimer() {
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        const elapsed = Date.now() - checkInTimestamp;
-
-        const hours = Math.floor(elapsed / (1000 * 60 * 60));
-        const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
-
-        timerDisplay.textContent = 
-          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-        const progressPercent = Math.min((elapsed / targetMilliseconds) * 100, 100);
-        progressBar.style.width = `${progressPercent}%`;
-
-        if (elapsed >= targetMilliseconds) {
-          progressBar.style.background = '#16a34a';
+        if (type === 'Check-In') {
+          checkInEpoch = Date.now();
+          startTimer();
+          document.getElementById('checkInBtn').disabled = true;
+          document.getElementById('checkOutBtn').disabled = false;
+          driverInput.disabled = true;
+          statusMsg.innerText = `Checked In successfully at ${timeFormatted}`;
+        } else {
+          clearInterval(shiftCountdown);
+          document.getElementById('checkInBtn').disabled = false;
+          document.getElementById('checkOutBtn').disabled = true;
+          driverInput.disabled = false;
+          statusMsg.innerText = `Checked Out successfully at ${timeFormatted}`;
+          document.getElementById('timerDisplay').innerText = "Shift Completed";
         }
-      }, 1000);
-    }
+      },
+      (err) => {
+        alert("Failed to get GPS location. Error: " + err.message + ". Please enable device location.");
+        statusMsg.innerText = "Location permission denied or unavailable.";
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 0
+      }
+    );
+  }
 
-    function stopTimer() {
-      clearInterval(timerInterval);
-    }
+  // 3. 12-Hour Shift Timer
+  function startTimer() {
+    const totalMs = SHIFT_HOURS * 60 * 60 * 1000;
+    const targetEnd = checkInEpoch + totalMs;
 
-    function appendLog(name, action, time, mapLink) {
-      if (logContainer.querySelector('p')) {
-        logContainer.innerHTML = '';
+    if (shiftCountdown) clearInterval(shiftCountdown);
+
+    shiftCountdown = setInterval(() => {
+      const remaining = targetEnd - Date.now();
+
+      if (remaining <= 0) {
+        clearInterval(shiftCountdown);
+        document.getElementById('timerDisplay').innerText = "12-Hour Shift Ended";
+        return;
       }
 
-      const logItem = document.createElement('div');
-      logItem.className = 'log-item';
-      logItem.innerHTML = `
-        <strong>${name}</strong>  <span>${action}</span> (${time})<br>
-        <a href="${mapLink}" target="_blank">Google Maps-   </a>
+      const hrs = Math.floor(remaining / (1000 * 60 * 60));
+      const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+
+      document.getElementById('timerDisplay').innerText = 
+        `Remaining Shift Time (12h): ${padZero(hrs)}:${padZero(mins)}:${padZero(secs)}`;
+    }, 1000);
+  }
+
+  function padZero(n) {
+    return n < 10 ? '0' + n : n;
+  }
+
+  // 4. Update Table UI
+  function renderTable() {
+    const tbody = document.getElementById('attendanceTableBody');
+    tbody.innerHTML = '';
+
+    attendanceLogs.slice().reverse().forEach(item => {
+      const tr = document.createElement('tr');
+      const badgeClass = item.type === 'Check-In' ? 'badge-in' : 'badge-out';
+      tr.innerHTML = `
+        <td>${item.date}</td>
+        <td><span class="${badgeClass}">${item.type}</span></td>
+        <td><strong>${item.driver}</strong></td>
+        <td>${item.time}</td>
+        <td><a href="${item.mapUrl}" target="_blank" class="map-link">${item.lat}, ${item.lng}</a></td>
       `;
+      tbody.appendChild(tr);
+    });
 
-      logContainer.prepend(logItem);
-    }
+    document.getElementById('logCount').innerText = `Total: ${attendanceLogs.length} logs`;
+  }
 
-    function copyReportLink() {
-      if (!latestShareText) return;
-      navigator.clipboard.writeText(latestShareText).then(() => {
-        alert("    !");
-      });
+  // 5. Generate jsPDF Document
+  function createPDFDoc() {
+    if (attendanceLogs.length === 0) {
+      alert("No attendance records to export. Please check-in first.");
+      return null;
     }
-  </script>
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    // Header styling
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, 210, 28, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("DRIVER ATTENDANCE & SHIFT REPORT", 14, 18);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Generated On: ${new Date().toLocaleString()}`, 14, 36);
+    doc.text(`Shift Duration: 12 Hours Standard`, 14, 42);
+
+    const tableRows = attendanceLogs.map((log, index) => [
+      index + 1,
+      log.date,
+      log.type,
+      log.driver,
+      log.time,
+      `${log.lat}, ${log.lng}`
+    ]);
+
+    doc.autoTable({
+      startY: 48,
+      head: [['#', 'Date', 'Type', 'Driver Name', 'Time', 'GPS Coordinates']],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 3.5 },
+      alternateRowStyles: { fillColor: [248, 250, 252] }
+    });
+
+    return doc;
+  }
+
+  function generatePDF() {
+    const doc = createPDFDoc();
+    if (!doc) return;
+    const driverName = document.getElementById('driverName').value.trim() || 'Driver';
+    const filename = `Attendance_${driverName}_${currentDateStr.replace(/ /g, '_')}.pdf`;
+    doc.save(filename);
+  }
+
+  // 6. Share PDF via Web Share API
+  async function sharePDF() {
+    const doc = createPDFDoc();
+    if (!doc) return;
+
+    const driverName = document.getElementById('driverName').value.trim() || 'Driver';
+    const filename = `Attendance_${driverName}_${currentDateStr.replace(/ /g, '_')}.pdf`;
+    const pdfBlob = doc.output('blob');
+    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `Attendance Report - ${driverName}`,
+          text: `Here is the shift attendance record for ${driverName} on ${currentDateStr}.`
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          alert("Sharing failed: " + err.message);
+        }
+      }
+    } else {
+      doc.save(filename);
+      alert("Direct app-sharing is not supported on this browser/desktop. The PDF has been downloaded so you can share it manually via WhatsApp/Email.");
+    }
+  }
+</script>
+
 </body>
 </html>
